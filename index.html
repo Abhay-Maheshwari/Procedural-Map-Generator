@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Procedural terrain map generator using simplex noise with fractal Brownian motion" />
+    <title>Procedural Map Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="app">
+      <header id="header">
+        <div class="header-left">
+          <div class="logo-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="url(#grad1)" opacity="0.9"/>
+              <path d="M2 17L12 22L22 17" stroke="url(#grad2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M2 12L12 17L22 12" stroke="url(#grad2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <defs>
+                <linearGradient id="grad1" x1="2" y1="2" x2="22" y2="12">
+                  <stop offset="0%" stop-color="#6366f1"/>
+                  <stop offset="100%" stop-color="#8b5cf6"/>
+                </linearGradient>
+                <linearGradient id="grad2" x1="2" y1="12" x2="22" y2="22">
+                  <stop offset="0%" stop-color="#6366f1"/>
+                  <stop offset="100%" stop-color="#a78bfa"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <h1>Procedural Map Generator</h1>
+        </div>
+        <div class="header-right">
+          <span class="badge">Simplex Noise</span>
+          <span class="badge">fBm</span>
+          <span class="badge">D3 SVG</span>
+        </div>
+      </header>
+
+      <main id="main">
+        <aside id="controls-panel">
+          <div class="panel-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m17.36-5.64l-4.24 4.24m-2.24-2.24L6.64 6.64m0 10.72l4.24-4.24m2.24 2.24l4.24 4.24"/>
+            </svg>
+            Controls
+          </div>
+
+          <!-- Seed -->
+          <div class="control-group">
+            <label for="seed-input">Seed</label>
+            <div class="input-row">
+              <input type="text" id="seed-input" value="42" spellcheck="false" autocomplete="off" />
+              <button id="random-seed-btn" title="Random Seed">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Map Size -->
+          <div class="control-group">
+            <label>Map Size</label>
+            <div class="size-selector">
+              <button class="size-btn" data-size="64">64</button>
+              <button class="size-btn active" data-size="128">128</button>
+              <button class="size-btn" data-size="256">256</button>
+              <button class="size-btn" data-size="512">512</button>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="control-group">
+            <div class="action-grid">
+              <button id="regenerate-btn" class="primary-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                Regenerate
+              </button>
+              <button id="share-btn" class="secondary-btn" title="Copy Share URL">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8m-11-8l5 5 5-5m-5 5V3"/>
+                </svg>
+                Share
+              </button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label>Export</label>
+            <div class="export-row">
+              <button id="export-svg-btn" class="export-btn">SVG</button>
+              <button id="export-png-btn" class="export-btn">PNG</button>
+            </div>
+          </div>
+
+          <!-- Noise Parameters -->
+          <div class="panel-section-title">Noise Parameters</div>
+
+          <div class="control-group">
+            <label for="octaves-input">Octaves</label>
+            <div class="slider-row">
+              <input type="range" id="octaves-input" min="1" max="8" value="4" step="1" />
+              <span class="slider-value" id="octaves-value">4</span>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label for="lacunarity-input">Lacunarity</label>
+            <div class="slider-row">
+              <input type="range" id="lacunarity-input" min="1.0" max="4.0" value="2.0" step="0.1" />
+              <span class="slider-value" id="lacunarity-value">2.0</span>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label for="persistence-input">Persistence</label>
+            <div class="slider-row">
+              <input type="range" id="persistence-input" min="0.1" max="0.9" value="0.5" step="0.05" />
+              <span class="slider-value" id="persistence-value">0.50</span>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label for="scale-input">Scale</label>
+            <div class="slider-row">
+              <input type="range" id="scale-input" min="10" max="200" value="80" step="5" />
+              <span class="slider-value" id="scale-value">80</span>
+            </div>
+          </div>
+
+          <!-- Biome Legend -->
+          <div class="panel-section-title">Biome Legend</div>
+          <div id="biome-legend" class="biome-legend"></div>
+
+          <!-- Stats -->
+          <div class="stats" id="stats">
+            <div class="stat-item">
+              <span class="stat-label">Render</span>
+              <span class="stat-value" id="render-time">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Cells</span>
+              <span class="stat-value" id="pixel-count">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Rivers</span>
+              <span class="stat-value" id="river-count">—</span>
+            </div>
+          </div>
+        </aside>
+
+        <section id="map-container">
+          <div id="svg-wrapper"></div>
+
+          <!-- Tooltip (follows cursor) -->
+          <div id="tooltip" class="tooltip">
+            <div class="tooltip-biome" id="tooltip-biome"></div>
+            <div class="tooltip-data">
+              <span id="tooltip-coords"></span>
+              <span id="tooltip-elev"></span>
+              <span id="tooltip-moist"></span>
+            </div>
+          </div>
+
+          <!-- Zoom indicator -->
+          <div class="zoom-hint" id="zoom-hint">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            </svg>
+            Scroll to zoom · Drag to pan · Double-click to reset
+          </div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
